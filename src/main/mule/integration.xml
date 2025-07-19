@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3a159e8c-09df-48a1-b1ed-a60682e26e81" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="QueryParams" doc:id="d0c3793d-7cbb-412e-9b52-ca400b313f56" >
+		<http:listener doc:name="Listener" doc:id="f77c9c36-6515-4e8a-a25b-602845d7e938" config-ref="HTTP_Listener_config" path="queryparams"/>
+		
+				<ee:transform doc:name="Transform Message" doc:id="10386176-12ae-4d04-9798-126f80c4e4f3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	titulo: "QUERYPARAMS",
+	peticion1: "localhost:8081/request //sin variable",
+	peticion2: "localhost:8081/request?variable1=valor //Petición con variable",
+	peticion3: "localhost:8081/request?variable1=valor&variable2=valor2 //Petición con múltiples variables (&)",
+	peticion4: "localhost:8081/request?variable1=valor&variable2=valor2&pordefectot= //variable default",
+	"default": attributes.queryParams.pordefecto default "valor default cuando el parámetro es null",
+	acceso: "attributes.queryParams.variable1",
+	casteo: "attributes.queryParams.numero as Number",
+	resultado: attributes.queryParams.numero as Number,	
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+	
+
+	</flow>
+	<flow name="UriParams" doc:id="9c031b1b-e3b0-4b78-a388-a2988c1366c4" >
+		<http:listener doc:name="Listener" doc:id="d2a5311d-7104-4e93-bcf5-14aa61cf6771" config-ref="HTTP_Listener_config" path="uriparams/{id}"/>
+		<ee:transform doc:name="Transform Message" doc:id="333c20fd-6f01-41ee-8ecb-2b59cd2a5efe" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	titulo: "URIPARAMS",
+	peticion:"localhost:8081/uriparams/id",
+	listener: "uriparams/{id}",
+	request: "localhost:8081/uriParams/10",
+	acceso: "attributes.uriParams.id",
+	resultado: attributes.uriParams.id
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="header" doc:id="9ef78472-0f02-441e-8d7b-bd88dda462d9" >
+		<http:listener doc:name="Header" doc:id="3bb20053-66de-4f2f-8e2f-353f30dc7741" config-ref="HTTP_Listener_config" path="header"/>
+		<ee:transform doc:name="Transform Message" doc:id="0539e902-9eb8-402c-9e07-21e0ea7f01a1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	titulo:"HEADERS",
+	peticion:"localhost:8081/header",
+	headers:"Para metadatos enviadas por HTTP que no forman parte de la url ni body. Usados para autenticación y tipo contenido (content-type)",
+	ejemplo: "Key: X-API-KEY
+Value: mi-clave-secreta-123
+
+Key: Authorization
+Value: Bearer abcdef12345",
+	acceso: "attributes.headers //Usar comillas si se incluye guiones",
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="body" doc:id="f6e44772-3606-4cdd-84d8-deac1267376e" >
+		<http:listener doc:name="Listener" doc:id="5f7e73b6-70ad-4de0-851e-cbb3cba2baea" config-ref="HTTP_Listener_config" path="body"/>
+		<ee:transform doc:name="Transform Message" doc:id="42204fef-ba3e-49a0-bfbc-03fab41ff506" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "titulo": payload.titulo as String,
+    "referencia":"payload.atributo //se usa payload. y el atributo a obtener.",
+    "attributes": payload.attributes as String,
+    "queryParams": payload.queryParams as String,
+    "uriParams": payload.uriParams as String,
+    "headers": payload.headers as String,
+    "method": payload.method as String,
+    "requestPath": payload.requestPath as String
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="metodos" doc:id="dfb07a8d-04dd-47c7-964f-8d0985ff2eda" >
+		<http:listener doc:name="Listener" doc:id="0c47605b-2d8e-417f-894f-dbf7b3d4e33b" config-ref="HTTP_Listener_config" path="metodos"/>
+		<ee:transform doc:name="Transform Message" doc:id="c7c3d46f-6e82-4c78-b8fc-6503f20ca44f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	titulo: "CONCATENACIÓN",
+	peticion1: "localhost:8081/metodos",
+	metodo:"attributes.method",
+	resultado: attributes.method,
+	concatenacion: "variable1: "++" ++ (attributes.queryParams.variable as String)",
+	resultado: "variable1: " ++ (attributes.queryParams.variable1 as String)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="setVariable" doc:id="c4147a4f-0311-4ab8-8a8f-e3cedfac5c2c" >
+		<http:listener doc:name="Listener" doc:id="1c886850-95e3-42ea-969f-5645e3cefc77" config-ref="HTTP_Listener_config" path="variable"/>
+		<set-variable value="#[attributes.queryParams.numero as Number]" doc:name="uriParam" doc:id="b4d5deb7-e57d-473f-8ff2-544513d32144" variableName="uriParam"/>
+		<ee:transform doc:name="Transform Message" doc:id="441a79b5-3e1d-471a-bc33-db2033ced62e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	titulo: "SET VARIABLE",
+	metodo: "attributes.queryParams.numero as Number //Con Set Variable",
+	resultado: vars.uriParam
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
